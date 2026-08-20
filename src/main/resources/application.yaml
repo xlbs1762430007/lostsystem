@@ -1,3 +1,39 @@
+server:
+  port: 8087
 spring:
   application:
     name: lostsystem
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/langchain4j?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+langchain4j:
+  community:
+    dashscope:
+      chat-model:
+        api-key: sk-ws-H.EEDLEXI.rQyq.MEYCIQDsnY7UgCgqCwJixhdxs56e2cp2rr7KI7clEmrUR0j03QIhALKjFOuc4afHOCqXZ2zQT1og6acMw6VJlk4RYKX2mmQZ
+        model-name: qwen-max
+      streaming-chat-model:
+        api-key: sk-ws-H.EEDLEXI.rQyq.MEYCIQDsnY7UgCgqCwJixhdxs56e2cp2rr7KI7clEmrUR0j03QIhALKjFOuc4afHOCqXZ2zQT1og6acMw6VJlk4RYKX2mmQZ
+        model-name: qwen-max
+
+logging:
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: TRACE
+        SQL: DEBUG
+
+# 开启 SQL 日志打印
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
