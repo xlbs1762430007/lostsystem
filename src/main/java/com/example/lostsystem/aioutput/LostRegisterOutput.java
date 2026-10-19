@@ -22,4 +22,7 @@ public class LostRegisterOutput {
 
     @Description("是否完成登记")
     private Boolean completed;
+
+    @Description("数据库记录id")
+    private Long id;
 }

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>玄参架构失物招领智能小助手</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6a5acd;
+            --accent: #0EA9FF;
+            --gradient-start: #4a6fa5;
+            --gradient-end: #6a5acd;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #e0f7fa, #f3e5f5);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 0;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .header {
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-panel {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(74, 111, 165, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .user-panel label {
+            color: var(--primary);
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .user-panel input {
+            padding: 8px 12px;
+            border: 1px solid rgba(74, 111, 165, 0.3);
+            border-radius: 20px;
+            outline: none;
+            width: 140px;
+            transition: all 0.3s ease;
+        }
+
+        .user-panel input:focus {
+            box-shadow: 0 0 0 2px var(--accent);
+            border-color: var(--accent);
+        }
+
+        .user-panel button {
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 111, 165, 0.4);
+            padding: 8px 16px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .user-panel button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 111, 165, 0.5);
+        }
+
+        .status-tip {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            padding: 8px 0 0;
+            width: 100%;
+            display: none;
+        }
+
+        .status-tip.show {
+            display: block;
+        }
+
+        .chat-container {
+            padding: 20px;
+        }
+
+        #chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(74, 111, 165, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .message-row {
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 16px;
+            gap: 8px;
+        }
+
+        .message-row.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message-row.assistant .avatar {
+            background: rgba(74, 111, 165, 0.15);
+        }
+
+        .message-row.user .avatar {
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            color: white;
+        }
+
+        .message-body {
+            max-width: 75%;
+        }
+
+        .message-bubble {
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message-row.user .message-bubble {
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-row.assistant .message-bubble {
+            background: rgba(74, 111, 165, 0.1);
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .message-row.assistant .message-time {
+            text-align: left;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid rgba(74, 111, 165, 0.3);
+            border-radius: 25px;
+            resize: none;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #message-input:focus {
+            box-shadow: 0 0 0 2px var(--accent);
+            border-color: var(--accent);
+        }
+
+        #send-button {
+            background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 111, 165, 0.4);
+            padding: 12px 24px;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        #send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 111, 165, 0.5);
+        }
+
+        #send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-dots {
+            display: inline-block;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas class="particles" id="particles"></canvas>
+
+        <div class="header">
+            <h1>✨ 玄参架构失物招领智能小助手 ✨</h1>
+        </div>
+
+        <div class="user-panel">
+            <label>当前用户ID: <span id="current-user-id">111</span></label>
+            <input type="text" id="userId-input" value="111" placeholder="请输入用户ID">
+            <button onclick="setUserId()">设置用户ID</button>
+            <button onclick="clearHistory()">清除历史记录</button>
+            <div class="status-tip" id="status-tip"></div>
+        </div>
+
+        <div class="chat-container">
+            <div id="chat-messages"></div>
+            <div class="input-area">
+                <textarea id="message-input" rows="2" placeholder="输入消息..."></textarea>
+                <button id="send-button" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const statusTip = document.getElementById('status-tip');
+        const currentUserIdSpan = document.getElementById('current-user-id');
+        const userIdInput = document.getElementById('userId-input');
+
+        let currentUserId = localStorage.getItem('userId') || '111';
+        let isLoading = false;
+
+        const WELCOME_MESSAGE = '您好！我是失物招领小助手，可以帮助您查询丢失物品信息或发布招领信息。'
+            + '如果丢失/捡到东西，请留下姓名，手机号，丢失/捡到物品，请问有什么可以帮您？';
+
+        userIdInput.value = currentUserId;
+        currentUserIdSpan.textContent = currentUserId;
+
+        messageInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function showStatus(msg) {
+            statusTip.textContent = msg;
+            statusTip.classList.add('show');
+            setTimeout(function () {
+                statusTip.classList.remove('show');
+            }, 3000);
+        }
+
+        function formatTime(dateStr) {
+            const d = dateStr ? new Date(dateStr) : new Date();
+            const h = String(d.getHours()).padStart(2, '0');
+            const m = String(d.getMinutes()).padStart(2, '0');
+            return h + ':' + m;
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function appendMessage(content, role, timeStr) {
+            const row = document.createElement('div');
+            row.className = 'message-row ' + role;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = role === 'user' ? '👤' : '🤖';
+
+            const body = document.createElement('div');
+            body.className = 'message-body';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = content;
+
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = timeStr || formatTime();
+
+            body.appendChild(bubble);
+            body.appendChild(time);
+            row.appendChild(avatar);
+            row.appendChild(body);
+            chatMessages.appendChild(row);
+            scrollToBottom();
+            return bubble;
+        }
+
+        function showWelcome() {
+            chatMessages.innerHTML = '';
+            appendMessage(WELCOME_MESSAGE, 'assistant');
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/ai/chat-history?userId=' + encodeURIComponent(currentUserId));
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+                const history = await response.json();
+                chatMessages.innerHTML = '';
+                if (!history || history.length === 0) {
+                    showWelcome();
+                    return;
+                }
+                history.forEach(function (item) {
+                    const role = item.role === '0' ? 'user' : 'assistant';
+                    appendMessage(item.content, role, formatTime(item.createdDate));
+                });
+            } catch (e) {
+                showWelcome();
+                showStatus('加载历史记录失败，请稍后再试');
+            }
+        }
+
+        function setUserId() {
+            const newId = userIdInput.value.trim();
+            if (!newId) {
+                showStatus('用户ID不能为空');
+                return;
+            }
+            currentUserId = newId;
+            currentUserIdSpan.textContent = currentUserId;
+            localStorage.setItem('userId', currentUserId);
+            loadHistory();
+        }
+
+        async function clearHistory() {
+            try {
+                const response = await fetch('/ai/chat-history?userId=' + encodeURIComponent(currentUserId), {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+                showWelcome();
+                showStatus('历史记录已清除');
+            } catch (e) {
+                showStatus('清除历史记录失败，请稍后再试');
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isLoading) {
+                return;
+            }
+
+            isLoading = true;
+            sendButton.disabled = true;
+            appendMessage(message, 'user');
+            messageInput.value = '';
+
+            const assistantBubble = appendMessage('', 'assistant');
+            assistantBubble.innerHTML = '<span class="typing-dots">...</span>';
+            scrollToBottom();
+
+            try {
+                const url = '/ai/chat-stream?message=' + encodeURIComponent(message)
+                    + '&userId=' + encodeURIComponent(currentUserId);
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('请求失败: ' + response.status);
+                }
+
+                assistantBubble.textContent = '';
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                        break;
+                    }
+                    assistantBubble.textContent += decoder.decode(value, { stream: true });
+                    scrollToBottom();
+                }
+            } catch (error) {
+                assistantBubble.textContent = '抱歉，发生了错误：' + error.message;
+            } finally {
+                isLoading = false;
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        loadHistory();
+
+        (function initParticles() {
+            const canvas = document.getElementById('particles');
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+            let particles = [];
+            let animationId;
+
+            function resize() {
+                canvas.width = container.offsetWidth;
+                canvas.height = container.offsetHeight;
+            }
+
+            function createParticles() {
+                particles = [];
+                const count = Math.floor((canvas.width * canvas.height) / 8000);
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        radius: Math.random() * 2 + 1,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        alpha: Math.random() * 0.5 + 0.2
+                    });
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(function (p) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(74, 111, 165, ' + p.alpha + ')';
+                    ctx.fill();
+                });
+                animationId = requestAnimationFrame(animate);
+            }
+
+            resize();
+            createParticles();
+            animate();
+            window.addEventListener('resize', function () {
+                cancelAnimationFrame(animationId);
+                resize();
+                createParticles();
+                animate();
+            });
+        })();
+    </script>
+</body>
+</html>

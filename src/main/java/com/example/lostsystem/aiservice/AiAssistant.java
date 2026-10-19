@@ -14,15 +14,16 @@ import reactor.core.publisher.Flux;
         chatModel = "qwenChatModel",
         chatMemoryProvider = "chatMemoryProvider",
         streamingChatModel = "qwenStreamingChatModel",
-        tools = "testTools")
+        tools = {"chatHistoryTools", "lostRegisterTools"})
 @SystemMessage(fromResource = "registerLost.txt")
 public interface AiAssistant {
 
     String chat(@MemoryId String id, @UserMessage String message);
 
-    Flux<String> streamingChat(@MemoryId String id, @UserMessage String message);
 
 
+
+    @SystemMessage(fromResource = "/registerlost.txt")
     @UserMessage("当前sessionId:{{sessionId}}; 用户当前消息: {{message}}")
     LostRegisterOutput registerLost(@V("sessionId") String sessionId, @V("message") String message);
 }
