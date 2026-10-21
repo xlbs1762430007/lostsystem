@@ -13,10 +13,10 @@ import org.hibernate.annotations.Comment;
 @Comment("丢失登记")
 public class LostRegisterEntity extends BaseEntity {
 
-    @Comment("用户姓名")
+    @Comment("捡到失物的用户姓名")
     private String username;
 
-    @Comment("用户手机号")
+    @Comment("捡到失物的用户手机号")
     private String phone;
 
     @Comment("失物名称")

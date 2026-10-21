@@ -362,7 +362,8 @@
                 if (!response.ok) {
                     throw new Error('请求失败');
                 }
-                const history = await response.json();
+                const payload = await response.json();
+                const history = Array.isArray(payload) ? payload : (payload.content || []);
                 chatMessages.innerHTML = '';
                 if (!history || history.length === 0) {
                     showWelcome();
